@@ -5,8 +5,8 @@ const bodyParser= require('body-parser');
 const MongoClient = require('mongodb').MongoClient;
 const PORT = 2000;
 var db;
-// var mongourl = 'mongodb://34.201.34.147:27017/';
-var mongoClass = require('./model/database.js')
+var mongourl = 'mongodb://34.201.34.147:27017/';
+// var mongoClass = require('./model/database.js');
 var collection_name = 'users';
 
 //tell Express to make this public folder accessible to the public by using a built-in middleware called express.static
@@ -14,6 +14,9 @@ app.use(express.static(__dirname + '/public'));
 // The urlencoded method within body-parser tells body-parser to extract data from the <form> element and add them to the body property in the request object
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
+
+
+
 
 app.set('view engine', 'ejs')
 app.set('views', './views');
@@ -37,6 +40,19 @@ app.get('/', (req, res) => {
   })
 })
 
+app.post('/find_by_name', (req, res) => {
+    console.log("Body received to add data is "+JSON.stringify(req.body));
+    var name = req.body.id;
+  db.collection(collection_name).find({first_name: name}).toArray((err, result) => {
+    if (err) return console.log(err)
+    // renders index.ejs
+  console.log("Data received from db to show in Modal is "+JSON.stringify(result));
+    res.send(result)
+  })
+})
+
+
+
 app.get('/new', (req, res) => {
   db.collection(collection_name).find().toArray((err, result) => {
     if (err) return console.log(err)
@@ -54,9 +70,10 @@ app.get('/bkp', (req, res) => {
 
 app.put('/update_user', (req, res) => {
 	console.log('i was called, and i am updating the db');
-	console.log('Data received to update');
+	console.log('Data received to update'+JSON.stringify(req.body));
+  console.log('_id is '+req.body._id);
   db.collection(collection_name)
-  .findOneAndUpdate({name: 'Akkas'}, {
+  .findOneAndUpdate({"_id":req.body._id}, {
     $set: {
       last_name: req.body.last_name,
       first_name: req.body.first_name,
@@ -73,10 +90,11 @@ app.put('/update_user', (req, res) => {
 
 app.delete('/delete_user', (req, res) => {
 	console.log('i was called, and i am deleting entry from the db');
-  db.collection(collection_name).findOneAndDelete({name: req.body.name},
+  console.log('Data i got is '+JSON.stringify(req.body));
+  db.collection(collection_name).findOneAndDelete({first_name: req.body.id},
   (err, result) => {
     if (err) return res.send(500, err)
-    res.send({message: 'A darth vadar quote got deleted'})
+    res.send({message: 'success'})
   })
 })
 
